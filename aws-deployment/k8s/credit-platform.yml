@@ -1,0 +1,489 @@
+# ============================================================
+# Credit Platform - Kubernetes Deployment
+# Covers "Kubernetes" skill from resume
+# Deploy to Amazon EKS
+# ============================================================
+
+# ── Namespace ─────────────────────────────────────────────
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: credit-platform
+
+---
+# ── ConfigMap (shared config for all services) ────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: credit-platform-config
+  namespace: credit-platform
+data:
+  EUREKA_URL: "http://eureka-service:8761/eureka"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka-service:9092"
+  REDIS_HOST: "redis-service"
+  DB_HOST: "your-rds-endpoint.ap-south-1.rds.amazonaws.com"
+  AWS_REGION: "ap-south-1"
+
+---
+# ── Secret (sensitive values) ─────────────────────────────
+apiVersion: v1
+kind: Secret
+metadata:
+  name: credit-platform-secrets
+  namespace: credit-platform
+type: Opaque
+stringData:
+  DB_PASSWORD: "CreditDb@2024"
+  REDIS_PASSWORD: "Redis@2024"
+  JWT_SECRET: "bXlTdXBlclNlY3JldEtleUZvckpXVFRva2VuR2VuZXJhdGlvbjEyMzQ1"
+  SENDGRID_API_KEY: "SG.mock_key"
+
+---
+# ── Eureka Service Discovery ──────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka-server
+  namespace: credit-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eureka-server
+  template:
+    metadata:
+      labels:
+        app: eureka-server
+    spec:
+      containers:
+        - name: eureka
+          image: steeltoeoss/eureka-server:latest
+          ports:
+            - containerPort: 8761
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: eureka-service
+  namespace: credit-platform
+spec:
+  selector:
+    app: eureka-server
+  ports:
+    - port: 8761
+      targetPort: 8761
+  type: ClusterIP
+
+---
+# ── Onboarding Service ────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onboarding-service
+  namespace: credit-platform
+  labels:
+    app: onboarding-service
+    version: IMAGE_TAG
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: onboarding-service
+  template:
+    metadata:
+      labels:
+        app: onboarding-service
+    spec:
+      containers:
+        - name: onboarding-service
+          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/onboarding-service:IMAGE_TAG
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: credit-platform-config
+            - secretRef:
+                name: credit-platform-secrets
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://$(DB_HOST):3306/credit_onboarding_db?useSSL=true&serverTimezone=UTC"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: onboarding-service
+  namespace: credit-platform
+spec:
+  selector:
+    app: onboarding-service
+  ports:
+    - port: 8081
+      targetPort: 8081
+  type: ClusterIP
+
+---
+# ── Loan Service ──────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loan-service
+  namespace: credit-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: loan-service
+  template:
+    metadata:
+      labels:
+        app: loan-service
+    spec:
+      containers:
+        - name: loan-service
+          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/loan-service:IMAGE_TAG
+          ports:
+            - containerPort: 8082
+          envFrom:
+            - configMapRef:
+                name: credit-platform-config
+            - secretRef:
+                name: credit-platform-secrets
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://$(DB_HOST):3306/credit_loan_db?useSSL=true&serverTimezone=UTC"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8082
+            initialDelaySeconds: 60
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loan-service
+  namespace: credit-platform
+spec:
+  selector:
+    app: loan-service
+  ports:
+    - port: 8082
+      targetPort: 8082
+  type: ClusterIP
+
+---
+# ── Disbursement Service ──────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: disbursement-service
+  namespace: credit-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: disbursement-service
+  template:
+    metadata:
+      labels:
+        app: disbursement-service
+    spec:
+      containers:
+        - name: disbursement-service
+          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/disbursement-service:IMAGE_TAG
+          ports:
+            - containerPort: 8083
+          envFrom:
+            - configMapRef:
+                name: credit-platform-config
+            - secretRef:
+                name: credit-platform-secrets
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://$(DB_HOST):3306/credit_disbursement_db?useSSL=true&serverTimezone=UTC"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: disbursement-service
+  namespace: credit-platform
+spec:
+  selector:
+    app: disbursement-service
+  ports:
+    - port: 8083
+      targetPort: 8083
+  type: ClusterIP
+
+---
+# ── Repayment Service ─────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: repayment-service
+  namespace: credit-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: repayment-service
+  template:
+    metadata:
+      labels:
+        app: repayment-service
+    spec:
+      containers:
+        - name: repayment-service
+          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/repayment-service:IMAGE_TAG
+          ports:
+            - containerPort: 8084
+          envFrom:
+            - configMapRef:
+                name: credit-platform-config
+            - secretRef:
+                name: credit-platform-secrets
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://$(DB_HOST):3306/credit_repayment_db?useSSL=true&serverTimezone=UTC"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: repayment-service
+  namespace: credit-platform
+spec:
+  selector:
+    app: repayment-service
+  ports:
+    - port: 8084
+      targetPort: 8084
+  type: ClusterIP
+
+---
+# ── Notification Service ──────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: credit-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/notification-service:IMAGE_TAG
+          ports:
+            - containerPort: 8085
+          envFrom:
+            - configMapRef:
+                name: credit-platform-config
+            - secretRef:
+                name: credit-platform-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: credit-platform
+spec:
+  selector:
+    app: notification-service
+  ports:
+    - port: 8085
+      targetPort: 8085
+  type: ClusterIP
+
+---
+# ── API Gateway ───────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: credit-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/api-gateway:IMAGE_TAG
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: credit-platform-config
+            - secretRef:
+                name: credit-platform-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: credit-platform
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: LoadBalancer
+
+---
+# ── Frontend ──────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: credit-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/frontend:IMAGE_TAG
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: credit-platform
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: LoadBalancer
+
+---
+# ── Horizontal Pod Autoscaler (Kubernetes skill!) ─────────
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: onboarding-hpa
+  namespace: credit-platform
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: onboarding-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: loan-hpa
+  namespace: credit-platform
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: loan-service
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70

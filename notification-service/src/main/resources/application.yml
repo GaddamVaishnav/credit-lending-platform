@@ -1,0 +1,56 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: notification-service
+
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb://localhost:27017/credit_notifications}
+      database: credit_notifications
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        max.poll.records: 50
+
+  mail:
+    host: smtp.sendgrid.net
+    port: 587
+    username: apikey
+    password: ${SENDGRID_API_KEY:mock_key}
+    from: ${MAIL_FROM:noreply@creditplatform.com}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID:mock_sid}
+  auth-token: ${TWILIO_AUTH_TOKEN:mock_token}
+  phone-number: ${TWILIO_PHONE_NUMBER:+1234567890}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.credit: INFO
+    org.springframework.kafka: WARN
+

@@ -1,0 +1,36 @@
+# Environment & secrets
+.env
+*.env
+application-local.yml
+application-prod.yml
+
+# Maven
+target/
+*.class
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.eclipse/
+*.project
+*.classpath
+
+# Logs
+*.log
+logs/
+
+# Docker volumes
+mysql_data/
+mongo_data/
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# OS
+.DS_Store
+Thumbs.db
