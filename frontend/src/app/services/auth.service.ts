@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
-const API = 'http://16.112.128.15:8081/api/v1';
+const API = '/api/v1';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
