@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
 
-const ONBOARD = 'http://localhost:8081/api/v1';
-const LOAN    = 'http://localhost:8082/api/v1';
-const REPAY   = 'http://localhost:8084/api/v1';
+const ONBOARD = 'http://16.112.128.15:8081/api/v1';
+const LOAN    = 'http://16.112.128.15:8082/api/v1';
+const REPAY   = 'http://16.112.128.15:8084/api/v1';
 
 @Injectable({ providedIn: 'root' })
 export class LoanService {
@@ -17,7 +17,7 @@ export class LoanService {
   fetchCreditScore()       { return this.http.post(`${ONBOARD}/credit-score/fetch`, {}); }
   getProfile(id: number)   { return this.http.get(`${ONBOARD}/customers/${id}/profile`); }
 
-  // Loans — pass customerId as query param
+  // Loans â€” pass customerId as query param
   applyForLoan(data: any)  { return this.http.post<any>(`${LOAN}/loans/apply?customerId=${this.cid}`, data); }
   getMyApplications()      { return this.http.get<any[]>(`${LOAN}/loans/my-applications?customerId=${this.cid}`); }
   getLoan(id: number)      { return this.http.get<any>(`${LOAN}/loans/${id}?customerId=${this.cid}`); }
@@ -26,9 +26,9 @@ export class LoanService {
     return this.http.get<any>(`${LOAN}/loans/emi-calculator?principal=${p}&annualRate=${r}&tenureMonths=${t}`);
   }
 
-  // Repayment — pass customerId as query param
+  // Repayment â€” pass customerId as query param
   getEmiSchedule(loanId: number)  { return this.http.get<any[]>(`${REPAY}/emi/${loanId}/schedule?customerId=${this.cid}`); }
   makePayment(data: any)           { return this.http.post<any>(`${REPAY}/repayments/pay?customerId=${this.cid}`, data); }
   getLoanSummary(loanId: number)   { return this.http.get<any>(`${REPAY}/repayments/${loanId}/summary?customerId=${this.cid}`); }
-  getForeclosure(loanId: number)   { return this.http.get<any>(`${REPAY}/repayments/${loanId}/foreclosure`); }
+  getForeclosure(loanId: number)   { return this.http.get<any>(`${REPAY}/repayments/${loanId}/foreclosure?customerId=${this.cid}`); }
 }

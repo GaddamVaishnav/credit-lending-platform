@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+﻿import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
@@ -7,8 +7,8 @@ import { ToastService } from '../../shared/toast.service';
 import { AuthService } from '../../services/auth.service';
 import { forkJoin } from 'rxjs';
 
-const LOAN_API    = 'http://localhost:8082/api/v1';
-const ONBOARD_API = 'http://localhost:8081/api/v1';
+const LOAN_API    = 'http://16.112.128.15:8082/api/v1';
+const ONBOARD_API = 'http://16.112.128.15:8081/api/v1';
 
 @Component({
   selector: 'app-admin',
@@ -19,14 +19,14 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
       <!-- Navbar -->
       <nav class="navbar">
         <a routerLink="/dashboard" class="nav-brand" style="text-decoration:none">
-          <div class="logo">₹</div>
+          <div class="logo">â‚¹</div>
           <span class="brand">CreditPlatform</span>
           <span class="admin-badge">ADMIN</span>
         </a>
         <div class="nav-right">
-          <button (click)="activeTab.set('dashboard')" class="nav-link" [class.active]="activeTab()==='dashboard'">📊 Dashboard</button>
-          <button (click)="activeTab.set('loans')"     class="nav-link" [class.active]="activeTab()==='loans'">💳 Loans</button>
-          <button (click)="activeTab.set('customers')" class="nav-link" [class.active]="activeTab()==='customers'">👥 Customers</button>
+          <button (click)="activeTab.set('dashboard')" class="nav-link" [class.active]="activeTab()==='dashboard'">ðŸ“Š Dashboard</button>
+          <button (click)="activeTab.set('loans')"     class="nav-link" [class.active]="activeTab()==='loans'">ðŸ’³ Loans</button>
+          <button (click)="activeTab.set('customers')" class="nav-link" [class.active]="activeTab()==='customers'">ðŸ‘¥ Customers</button>
           <button (click)="logout()" class="btn-logout">Logout</button>
         </div>
       </nav>
@@ -37,50 +37,50 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
         <div *ngIf="activeTab()==='dashboard'">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
             <h2 class="page-title" style="margin:0">Admin Dashboard</h2>
-            <button (click)="loadAll()" class="btn-refresh">🔄 Refresh All</button>
+            <button (click)="loadAll()" class="btn-refresh">ðŸ”„ Refresh All</button>
           </div>
 
           <!-- Stats grid -->
           <div class="stats-grid">
             <div class="stat-card" style="border-color:#3b82f6">
-              <div class="stat-icon">👥</div>
+              <div class="stat-icon">ðŸ‘¥</div>
               <div>
                 <div class="stat-num">{{ customerStats().totalCustomers }}</div>
                 <div class="stat-label">Total Customers</div>
               </div>
             </div>
             <div class="stat-card" style="border-color:#10b981">
-              <div class="stat-icon">✅</div>
+              <div class="stat-icon">âœ…</div>
               <div>
                 <div class="stat-num">{{ customerStats().eligibleCustomers }}</div>
                 <div class="stat-label">Eligible Customers</div>
               </div>
             </div>
             <div class="stat-card" style="border-color:#f59e0b">
-              <div class="stat-icon">⏳</div>
+              <div class="stat-icon">â³</div>
               <div>
                 <div class="stat-num">{{ loanStats().pendingLoans }}</div>
                 <div class="stat-label">Pending Approvals</div>
               </div>
             </div>
             <div class="stat-card" style="border-color:#10b981">
-              <div class="stat-icon">💳</div>
+              <div class="stat-icon">ðŸ’³</div>
               <div>
                 <div class="stat-num">{{ loanStats().approvedLoans }}</div>
                 <div class="stat-label">Approved Loans</div>
               </div>
             </div>
             <div class="stat-card" style="border-color:#ef4444">
-              <div class="stat-icon">❌</div>
+              <div class="stat-icon">âŒ</div>
               <div>
                 <div class="stat-num">{{ loanStats().rejectedLoans }}</div>
                 <div class="stat-label">Rejected Loans</div>
               </div>
             </div>
             <div class="stat-card" style="border-color:#8b5cf6">
-              <div class="stat-icon">💰</div>
+              <div class="stat-icon">ðŸ’°</div>
               <div>
-                <div class="stat-num">₹{{ (loanStats().totalDisbursed || 0) | number:'1.0-0' }}</div>
+                <div class="stat-num">â‚¹{{ (loanStats().totalDisbursed || 0) | number:'1.0-0' }}</div>
                 <div class="stat-label">Total Disbursed</div>
               </div>
             </div>
@@ -89,11 +89,11 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
           <!-- Pending approvals -->
           <div class="section-card">
             <div class="section-hdr">
-              <h3>⚡ Pending Approvals ({{ pendingLoans().length }})</h3>
-              <button (click)="activeTab.set('loans')" class="link-btn">View all loans →</button>
+              <h3>âš¡ Pending Approvals ({{ pendingLoans().length }})</h3>
+              <button (click)="activeTab.set('loans')" class="link-btn">View all loans â†’</button>
             </div>
             <div *ngIf="pendingLoans().length === 0" class="empty">
-              🎉 No pending approvals — all caught up!
+              ðŸŽ‰ No pending approvals â€” all caught up!
             </div>
             <table *ngIf="pendingLoans().length > 0">
               <thead>
@@ -110,13 +110,13 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
                     <div style="font-size:0.72rem;color:#9ca3af">ID: {{ loan.customerId }}</div>
                   </td>
                   <td>{{ loan.loanType?.replace('_',' ') }}</td>
-                  <td><strong>₹{{ loan.requestedAmount | number }}</strong></td>
+                  <td><strong>â‚¹{{ loan.requestedAmount | number }}</strong></td>
                   <td>{{ loan.tenureMonths }}mo</td>
                   <td><span class="badge" [style.background]="loanBg(loan.status)" [style.color]="loanColor(loan.status)">{{ loan.status?.replace('_',' ') }}</span></td>
                   <td>{{ loan.appliedAt | date:'dd MMM yy' }}</td>
                   <td>
-                    <button (click)="approveLoan(loan)" class="btn-approve">✅ Approve</button>
-                    <button (click)="openReject(loan)"  class="btn-reject">❌ Reject</button>
+                    <button (click)="approveLoan(loan)" class="btn-approve">âœ… Approve</button>
+                    <button (click)="openReject(loan)"  class="btn-reject">âŒ Reject</button>
                   </td>
                 </tr>
               </tbody>
@@ -130,7 +130,7 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
             <h2 class="page-title" style="margin:0">All Loan Applications</h2>
             <div style="display:flex;gap:0.5rem;align-items:center">
               <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="filterLoans()"
-                placeholder="🔍 Search by customer ID..."
+                placeholder="ðŸ” Search by customer ID..."
                 style="border:1px solid #e2e8f0;border-radius:0.375rem;padding:0.375rem 0.75rem;font-size:0.8rem;outline:none">
               <select [(ngModel)]="filterStatus" (ngModelChange)="filterLoans()" class="filter-sel">
                 <option value="">All Status</option>
@@ -143,7 +143,7 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
                 <option value="DISBURSED">Disbursed</option>
                 <option value="CANCELLED">Cancelled</option>
               </select>
-              <button (click)="loadAll()" class="btn-refresh">🔄</button>
+              <button (click)="loadAll()" class="btn-refresh">ðŸ”„</button>
             </div>
           </div>
 
@@ -170,10 +170,10 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
                       <div style="font-size:0.72rem;color:#9ca3af">Customer #{{ loan.customerId }}</div>
                     </td>
                     <td>{{ loan.loanType?.replace('_',' ') }}</td>
-                    <td>₹{{ loan.requestedAmount | number }}</td>
-                    <td>{{ loan.approvedAmount ? ('₹' + (loan.approvedAmount | number)) : '—' }}</td>
-                    <td>{{ loan.emiAmount ? ('₹' + (loan.emiAmount | number:'1.0-0') + '/mo') : '—' }}</td>
-                    <td>{{ loan.interestRate ? (loan.interestRate + '%') : '—' }}</td>
+                    <td>â‚¹{{ loan.requestedAmount | number }}</td>
+                    <td>{{ loan.approvedAmount ? ('â‚¹' + (loan.approvedAmount | number)) : 'â€”' }}</td>
+                    <td>{{ loan.emiAmount ? ('â‚¹' + (loan.emiAmount | number:'1.0-0') + '/mo') : 'â€”' }}</td>
+                    <td>{{ loan.interestRate ? (loan.interestRate + '%') : 'â€”' }}</td>
                     <td>
                       <span class="badge" [style.background]="loanBg(loan.status)" [style.color]="loanColor(loan.status)">
                         {{ loan.status?.replace('_',' ') }}
@@ -182,9 +182,9 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
                     <td>{{ loan.appliedAt | date:'dd MMM yy' }}</td>
                     <td>
                       <div style="display:flex;gap:0.25rem;flex-wrap:wrap">
-                        <button *ngIf="canApprove(loan.status)" (click)="approveLoan(loan)" class="btn-approve">✅</button>
-                        <button *ngIf="canReject(loan.status)"  (click)="openReject(loan)"  class="btn-reject">❌</button>
-                        <button *ngIf="loan.status==='APPROVED'" (click)="setAgreementPending(loan)" class="btn-action" title="Move to Agreement">📋</button>
+                        <button *ngIf="canApprove(loan.status)" (click)="approveLoan(loan)" class="btn-approve">âœ…</button>
+                        <button *ngIf="canReject(loan.status)"  (click)="openReject(loan)"  class="btn-reject">âŒ</button>
+                        <button *ngIf="loan.status==='APPROVED'" (click)="setAgreementPending(loan)" class="btn-action" title="Move to Agreement">ðŸ“‹</button>
                       </div>
                     </td>
                   </tr>
@@ -201,9 +201,9 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
             <h2 class="page-title" style="margin:0">All Customers ({{ customers().length }})</h2>
             <div style="display:flex;gap:0.5rem">
               <input type="text" [(ngModel)]="customerSearch"
-                placeholder="🔍 Search by name or email..."
+                placeholder="ðŸ” Search by name or email..."
                 style="border:1px solid #e2e8f0;border-radius:0.375rem;padding:0.375rem 0.75rem;font-size:0.8rem;outline:none">
-              <button (click)="loadAll()" class="btn-refresh">🔄</button>
+              <button (click)="loadAll()" class="btn-refresh">ðŸ”„</button>
             </div>
           </div>
 
@@ -223,11 +223,11 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
                     <td><strong>{{ c.fullName }}</strong></td>
                     <td>{{ c.email }}</td>
                     <td>{{ c.mobile }}</td>
-                    <td>₹{{ c.monthlyIncome | number }}</td>
+                    <td>â‚¹{{ c.monthlyIncome | number }}</td>
                     <td>{{ c.employmentType }}</td>
                     <td>
                       <strong [style.color]="scoreColor(c.creditScore)">
-                        {{ c.creditScore || '—' }}
+                        {{ c.creditScore || 'â€”' }}
                       </strong>
                       <span *ngIf="c.creditScore" style="font-size:0.7rem;margin-left:0.25rem" [style.color]="scoreColor(c.creditScore)">
                         {{ scoreLabel(c.creditScore) }}
@@ -241,9 +241,9 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
                     <td>{{ c.createdAt | date:'dd MMM yy' }}</td>
                     <td>
                       <div style="display:flex;gap:0.25rem;flex-wrap:wrap">
-                        <button *ngIf="c.status !== 'ELIGIBLE'" (click)="makeEligible(c)" class="btn-approve" title="Make Eligible">✅ Eligible</button>
-                        <button *ngIf="c.status === 'ELIGIBLE'" disabled class="btn-approve" style="opacity:0.4">✓ Eligible</button>
-                        <button (click)="openScoreModal(c)" class="btn-action" title="Update Credit Score">📊 Score</button>
+                        <button *ngIf="c.status !== 'ELIGIBLE'" (click)="makeEligible(c)" class="btn-approve" title="Make Eligible">âœ… Eligible</button>
+                        <button *ngIf="c.status === 'ELIGIBLE'" disabled class="btn-approve" style="opacity:0.4">âœ“ Eligible</button>
+                        <button (click)="openScoreModal(c)" class="btn-action" title="Update Credit Score">ðŸ“Š Score</button>
                       </div>
                     </td>
                   </tr>
@@ -259,18 +259,18 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
       <!-- ===== REJECT MODAL ===== -->
       <div *ngIf="rejectModal()" class="modal-overlay" (click)="rejectModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
-          <h3 style="margin-bottom:0.5rem">❌ Reject Loan Application</h3>
+          <h3 style="margin-bottom:0.5rem">âŒ Reject Loan Application</h3>
           <div class="modal-info">
             <span>Loan #{{ selectedLoan()?.id }}</span>
             <span>{{ getCustomerName(selectedLoan()?.customerId) }}</span>
-            <span>₹{{ selectedLoan()?.requestedAmount | number }}</span>
+            <span>â‚¹{{ selectedLoan()?.requestedAmount | number }}</span>
           </div>
           <div class="field">
             <label>Rejection reason *</label>
             <select [(ngModel)]="rejectReason" style="width:100%;border:1.5px solid #d1d5db;border-radius:0.5rem;padding:0.6rem 0.75rem;font-size:0.875rem;outline:none">
               <option value="">Select reason</option>
-              <option value="Low credit score — below minimum threshold of 650">Low credit score</option>
-              <option value="High FOIR — debt obligations exceed 50% of income">High FOIR ratio</option>
+              <option value="Low credit score â€” below minimum threshold of 650">Low credit score</option>
+              <option value="High FOIR â€” debt obligations exceed 50% of income">High FOIR ratio</option>
               <option value="Insufficient monthly income for requested amount">Insufficient income</option>
               <option value="Incomplete or invalid KYC documentation">Incomplete documentation</option>
               <option value="Existing loan default or NPA history">Existing loan default</option>
@@ -285,7 +285,7 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
           </div>
           <div style="display:flex;gap:0.75rem">
             <button (click)="confirmReject()" class="btn-reject-modal" [disabled]="!rejectReason || rejecting()">
-              {{ rejecting() ? 'Rejecting...' : '❌ Confirm Rejection' }}
+              {{ rejecting() ? 'Rejecting...' : 'âŒ Confirm Rejection' }}
             </button>
             <button (click)="rejectModal.set(false)" class="btn-cancel">Cancel</button>
           </div>
@@ -295,18 +295,18 @@ const ONBOARD_API = 'http://localhost:8081/api/v1';
       <!-- ===== CREDIT SCORE MODAL ===== -->
       <div *ngIf="scoreModal()" class="modal-overlay" (click)="scoreModal.set(false)">
         <div class="modal" (click)="$event.stopPropagation()">
-          <h3>📊 Update Credit Score</h3>
+          <h3>ðŸ“Š Update Credit Score</h3>
           <p style="color:#6b7280;font-size:0.875rem;margin-bottom:1rem">
             Customer: <strong>{{ selectedCustomer()?.fullName }}</strong> |
             Current score: <strong>{{ selectedCustomer()?.creditScore || 'Not set' }}</strong>
           </p>
           <div class="field">
-            <label>New credit score (300–900)</label>
+            <label>New credit score (300â€“900)</label>
             <input type="number" [(ngModel)]="newScore" min="300" max="900"
               placeholder="e.g. 750"
               style="width:100%;border:1.5px solid #d1d5db;border-radius:0.5rem;padding:0.6rem 0.75rem;font-size:0.875rem;outline:none;box-sizing:border-box">
             <div style="font-size:0.75rem;margin-top:0.375rem;color:#6b7280">
-              300–549: Poor | 550–649: Fair | 650–749: Good | 750+: Excellent
+              300â€“549: Poor | 550â€“649: Fair | 650â€“749: Good | 750+: Excellent
             </div>
           </div>
           <div style="display:flex;gap:0.75rem">
@@ -483,7 +483,7 @@ export class AdminComponent implements OnInit {
   approveLoan(loan: any) {
     this.http.post(`${LOAN_API}/loans/admin/${loan.id}/approve`, {}).subscribe({
       next: (res: any) => {
-        this.toast.success(`✅ Loan #${loan.id} approved for ${this.getCustomerName(loan.customerId)}! EMI: ₹${res.emiAmount?.toFixed(0) || ''}/mo`);
+        this.toast.success(`âœ… Loan #${loan.id} approved for ${this.getCustomerName(loan.customerId)}! EMI: â‚¹${res.emiAmount?.toFixed(0) || ''}/mo`);
         this.loadAll();
       },
       error: () => {}
@@ -512,7 +512,7 @@ export class AdminComponent implements OnInit {
       : this.rejectReason;
     this.http.post(`${LOAN_API}/loans/admin/${this.selectedLoan()?.id}/reject`, { reason }).subscribe({
       next: () => {
-        this.toast.warning(`Loan #${this.selectedLoan()?.id} rejected — ${this.rejectReason}`);
+        this.toast.warning(`Loan #${this.selectedLoan()?.id} rejected â€” ${this.rejectReason}`);
         this.rejectModal.set(false);
         this.rejecting.set(false);
         this.loadAll();
@@ -524,7 +524,7 @@ export class AdminComponent implements OnInit {
   makeEligible(customer: any) {
     this.http.post(`${ONBOARD_API}/admin/customers/${customer.id}/make-eligible`, {}).subscribe({
       next: (res: any) => {
-        this.toast.success(`✅ ${customer.fullName} is now ELIGIBLE`);
+        this.toast.success(`âœ… ${customer.fullName} is now ELIGIBLE`);
         this.loadAll();
       },
       error: () => {}
@@ -567,3 +567,4 @@ export class AdminComponent implements OnInit {
     this.router.navigate(["/admin-login"]);
   }
 }
+

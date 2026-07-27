@@ -1,10 +1,10 @@
-import { Injectable, signal } from '@angular/core';
+﻿import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 
-const API = 'http://localhost:8081/api/v1';
+const API = 'http://16.112.128.15:8081/api/v1';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -31,7 +31,7 @@ export class AuthService {
     );
   }
 
-  // Fetch fresh profile from API — always up to date
+  // Fetch fresh profile from API â€” always up to date
   refreshProfile(customerId: number): Observable<any> {
     return this.http.get<any>(`${API}/customers/${customerId}/profile`).pipe(
       tap(profile => {
@@ -61,5 +61,6 @@ export class AuthService {
   isLoggedIn(): boolean { return !!this.getToken(); }
   getCustomerId(): number { return this.currentUser()?.id || 1; }
 }
+
 
 
