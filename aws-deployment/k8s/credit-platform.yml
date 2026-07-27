@@ -420,7 +420,6 @@ spec:
         app: frontend
     spec:
       containers:
-        -
         - name: frontend
           image: ACCOUNT_ID.dkr.ecr.ap-south-2.amazonaws.com/credit/frontend:IMAGE_TAG
           ports:
