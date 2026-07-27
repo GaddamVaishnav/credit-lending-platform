@@ -21,8 +21,8 @@ data:
   EUREKA_URL: "http://eureka-service:8761/eureka"
   KAFKA_BOOTSTRAP_SERVERS: "kafka-service:9092"
   REDIS_HOST: "redis-service"
-  DB_HOST: "your-rds-endpoint.ap-south-1.rds.amazonaws.com"
-  AWS_REGION: "ap-south-1"
+  DB_HOST: "your-rds-endpoint.ap-south-2.rds.amazonaws.com"
+  AWS_REGION: "ap-south-2"
 
 ---
 # ── Secret (sensitive values) ─────────────────────────────
@@ -103,7 +103,7 @@ spec:
     spec:
       containers:
         - name: onboarding-service
-          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/onboarding-service:IMAGE_TAG
+          image: ACCOUNT_ID.dkr.ecr.ap-south-2.amazonaws.com/credit/onboarding-service:IMAGE_TAG
           ports:
             - containerPort: 8081
           envFrom:
@@ -166,7 +166,7 @@ spec:
     spec:
       containers:
         - name: loan-service
-          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/loan-service:IMAGE_TAG
+          image: ACCOUNT_ID.dkr.ecr.ap-south-2.amazonaws.com/credit/loan-service:IMAGE_TAG
           ports:
             - containerPort: 8082
           envFrom:
@@ -223,7 +223,7 @@ spec:
     spec:
       containers:
         - name: disbursement-service
-          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/disbursement-service:IMAGE_TAG
+          image: ACCOUNT_ID.dkr.ecr.ap-south-2.amazonaws.com/credit/disbursement-service:IMAGE_TAG
           ports:
             - containerPort: 8083
           envFrom:
@@ -274,7 +274,7 @@ spec:
     spec:
       containers:
         - name: repayment-service
-          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/repayment-service:IMAGE_TAG
+          image: ACCOUNT_ID.dkr.ecr.ap-south-2.amazonaws.com/credit/repayment-service:IMAGE_TAG
           ports:
             - containerPort: 8084
           envFrom:
@@ -325,7 +325,7 @@ spec:
     spec:
       containers:
         - name: notification-service
-          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/notification-service:IMAGE_TAG
+          image: ACCOUNT_ID.dkr.ecr.ap-south-2.amazonaws.com/credit/notification-service:IMAGE_TAG
           ports:
             - containerPort: 8085
           envFrom:
@@ -373,7 +373,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/api-gateway:IMAGE_TAG
+          image: ACCOUNT_ID.dkr.ecr.ap-south-2.amazonaws.com/credit/api-gateway:IMAGE_TAG
           ports:
             - containerPort: 8080
           envFrom:
@@ -420,8 +420,9 @@ spec:
         app: frontend
     spec:
       containers:
+        -
         - name: frontend
-          image: ACCOUNT_ID.dkr.ecr.ap-south-1.amazonaws.com/credit/frontend:IMAGE_TAG
+          image: ACCOUNT_ID.dkr.ecr.ap-south-2.amazonaws.com/credit/frontend:IMAGE_TAG
           ports:
             - containerPort: 80
           resources:
