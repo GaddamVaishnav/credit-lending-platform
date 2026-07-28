@@ -9,7 +9,7 @@ const ENV: Env = 'production'; // ← Change to 'production' for AWS
 
 const BASE: Record<Env, string> = {
   local:      '',                     // uses Angular proxy / nginx
-  production: 'http://16.112.128.15'  // direct EC2 IP
+  production: 'https://creditplatform.duckdns.org'  // direct EC2 IP
 };
 
 const BASE_URL = BASE[ENV];
