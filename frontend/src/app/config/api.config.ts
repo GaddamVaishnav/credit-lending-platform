@@ -5,7 +5,7 @@
 
 type Env = 'local' | 'production';
 
-const ENV: Env = 'production'; // ← Change to 'production' for AWS
+const ENV: Env = 'local'; // ← Change to 'production' for AWS
 
 const BASE: Record<Env, string> = {
   local:      '',                     // uses Angular proxy / nginx
@@ -22,3 +22,4 @@ export const API = {
   DISBURSEMENT: `${BASE_URL}/api/disbursement/api/v1`,
   GATEWAY:      `${BASE_URL}/api/gateway/api/v1`,
 };
+
