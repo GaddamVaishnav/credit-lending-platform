@@ -1,10 +1,9 @@
-﻿import { Injectable, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
-
-const API = '/api/v1';
+import { API } from '../config/api.config';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -16,39 +15,36 @@ export class AuthService {
   }
 
   register(data: any) {
-    return this.http.post(`${API}/auth/register`, data);
+    return this.http.post(`${API.ONBOARDING}/auth/register`, data);
   }
 
   verifyOtp(mobile: string, otp: string) {
-    return this.http.post<any>(`${API}/auth/verify-otp`, { mobile, otp }).pipe(
+    return this.http.post<any>(`${API.ONBOARDING}/auth/verify-otp`, { mobile, otp }).pipe(
       tap(res => this.storeSession(res))
     );
   }
 
   login(email: string, password: string) {
-    return this.http.post<any>(`${API}/auth/login`, { email, password }).pipe(
+    return this.http.post<any>(`${API.ONBOARDING}/auth/login`, { email, password }).pipe(
       tap(res => this.storeSession(res))
     );
   }
 
-  // Fetch fresh profile from API â€” always up to date
   refreshProfile(customerId: number): Observable<any> {
-    return this.http.get<any>(`${API}/customers/${customerId}/profile`).pipe(
+    return this.http.get<any>(`${API.ONBOARDING}/customers/${customerId}/profile`).pipe(
       tap(profile => {
-        localStorage.setItem('user', JSON.stringify(profile));
-        this.currentUser.set(profile);
+        const merged = { ...this.currentUser(), ...profile };
+        localStorage.setItem('user', JSON.stringify(merged));
+        this.currentUser.set(merged);
       })
     );
   }
 
-  private storeSession(res: any) {
+  private storeSession(res: any): void {
     localStorage.setItem('token', res.accessToken);
-    localStorage.setItem('refreshToken', res.refreshToken);
-
-    if (res.profile) {
-      localStorage.setItem('user', JSON.stringify(res.profile));
-      this.currentUser.set(res.profile);
-    }
+    const profile = res.profile || {};
+    localStorage.setItem('user', JSON.stringify(profile));
+    this.currentUser.set(profile);
   }
 
   logout() {
@@ -58,9 +54,9 @@ export class AuthService {
   }
 
   getToken(): string | null { return localStorage.getItem('token'); }
-  isLoggedIn(): boolean { return !!this.getToken(); }
-  getCustomerId(): number { return this.currentUser()?.id || 1; }
+  isLoggedIn(): boolean     { return !!this.getToken(); }
+  getCustomerId(): number   {
+    const user = this.currentUser();
+    return user?.id || user?.customerId || 1;
+  }
 }
-
-
-

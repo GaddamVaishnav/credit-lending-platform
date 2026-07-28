@@ -29,8 +29,8 @@ public class EmiCalculationService {
      */
     @Transactional
     public List<EmiSchedule> generateEmiSchedule(Long loanId, Long customerId,
-                                                   double principal, double annualRate,
-                                                   int tenureMonths, LocalDate firstEmiDate) {
+                                                 double principal, double annualRate,
+                                                 int tenureMonths, LocalDate firstEmiDate) {
         double monthlyRate = annualRate / 12 / 100;
         double emi = calculateEmi(principal, monthlyRate, tenureMonths);
 
@@ -73,9 +73,10 @@ public class EmiCalculationService {
      * EMI formula: P × r × (1+r)^n / ((1+r)^n - 1)
      */
     public double calculateEmi(double principal, double monthlyRate, int tenureMonths) {
-        if (monthlyRate == 0) return principal / tenureMonths;
+        if (monthlyRate == 0) return round(principal / tenureMonths);
         double factor = Math.pow(1 + monthlyRate, tenureMonths);
-        return (principal * monthlyRate * factor) / (factor - 1);
+        double emi = (principal * monthlyRate * factor) / (factor - 1);
+        return round(emi); // ensure 2‑decimal precision
     }
 
     /**

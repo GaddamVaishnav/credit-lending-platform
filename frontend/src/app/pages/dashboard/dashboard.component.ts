@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { LoanService } from '../../services/loan.service';
+import { CustomerService } from '../../services/customer.service';
+import { ToastService } from '../../shared/toast.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -11,9 +13,10 @@ import { LoanService } from '../../services/loan.service';
   template: `
     <div class="app">
       <nav class="navbar">
-        <a routerLink="/dashboard" class="nav-brand" style="text-decoration:none">
-            <div class="logo">₹</div><span class="brand">CreditPlatform</span>
-        </a>
+        <div class="nav-brand">
+          <div class="logo">₹</div>
+          <span class="brand">CreditPlatform</span>
+        </div>
         <div class="nav-right">
           <a routerLink="/dashboard" class="nav-link active">Dashboard</a>
           <a routerLink="/loans"     class="nav-link">Apply Loan</a>
@@ -222,7 +225,12 @@ export class DashboardComponent implements OnInit {
   loansLoading = signal(true);
   fetchingScore = signal(false);
 
-  constructor(public auth: AuthService, private loanService: LoanService) {}
+  constructor(
+    public auth: AuthService,
+    private loanService: LoanService,
+    private customerService: CustomerService,
+    private toast: ToastService
+  ) {}
 
   ngOnInit() {
     // Always fetch fresh profile on dashboard load
@@ -233,9 +241,14 @@ export class DashboardComponent implements OnInit {
     this.loading.set(true);
     const customerId = this.auth.getCustomerId();
 
-    // Refresh profile from API
-    this.auth.refreshProfile(customerId).subscribe({
-      next: () => this.loading.set(false),
+    // Use CustomerService to get fresh profile
+    this.customerService.getProfile(customerId).subscribe({
+      next: profile => {
+        const merged = { ...this.auth.currentUser(), ...profile };
+        localStorage.setItem('user', JSON.stringify(merged));
+        this.auth.currentUser.set(merged);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false)
     });
 
@@ -251,10 +264,12 @@ export class DashboardComponent implements OnInit {
 
   fetchScore() {
     this.fetchingScore.set(true);
-    this.loanService.fetchCreditScore().subscribe({
+    // Use CustomerService to fetch credit score
+    this.customerService.fetchCreditScore().subscribe({
       next: () => {
         this.fetchingScore.set(false);
-        setTimeout(() => this.refreshData(), 3000); // Refresh after 3 sec
+        this.toast.info('Credit score refreshing... Please wait');
+        setTimeout(() => this.refreshData(), 3000);
       },
       error: () => this.fetchingScore.set(false)
     });

@@ -1,10 +1,7 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
-
-const ONBOARD = 'http://16.112.128.15:8081/api/v1';
-const LOAN    = 'http://16.112.128.15:8082/api/v1';
-const REPAY   = 'http://16.112.128.15:8084/api/v1';
+import { API } from '../config/api.config';
 
 @Injectable({ providedIn: 'root' })
 export class LoanService {
@@ -12,23 +9,39 @@ export class LoanService {
 
   private get cid() { return this.auth.getCustomerId(); }
 
-  // Onboarding
-  submitKyc(data: any)     { return this.http.post(`${ONBOARD}/kyc/submit`, data); }
-  fetchCreditScore()       { return this.http.post(`${ONBOARD}/credit-score/fetch`, {}); }
-  getProfile(id: number)   { return this.http.get(`${ONBOARD}/customers/${id}/profile`); }
+  // ── Onboarding ───────────────────────────────────────────
+  submitKyc(data: any)    { return this.http.post(`${API.ONBOARDING}/kyc/submit`, data); }
+  fetchCreditScore()      { return this.http.post(`${API.ONBOARDING}/credit-score/fetch`, {}); }
+  getProfile(id: number)  { return this.http.get(`${API.ONBOARDING}/customers/${id}/profile`); }
 
-  // Loans â€” pass customerId as query param
-  applyForLoan(data: any)  { return this.http.post<any>(`${LOAN}/loans/apply?customerId=${this.cid}`, data); }
-  getMyApplications()      { return this.http.get<any[]>(`${LOAN}/loans/my-applications?customerId=${this.cid}`); }
-  getLoan(id: number)      { return this.http.get<any>(`${LOAN}/loans/${id}?customerId=${this.cid}`); }
-  signAgreement(id: number){ return this.http.post<any>(`${LOAN}/loans/${id}/sign-agreement?customerId=${this.cid}`, {}); }
+  // ── Loans ────────────────────────────────────────────────
+  applyForLoan(data: any) {
+    return this.http.post<any>(`${API.LOAN}/loans/apply?customerId=${this.cid}`, data);
+  }
+  getMyApplications() {
+    return this.http.get<any[]>(`${API.LOAN}/loans/my-applications?customerId=${this.cid}`);
+  }
+  getLoan(id: number) {
+    return this.http.get<any>(`${API.LOAN}/loans/${id}?customerId=${this.cid}`);
+  }
+  signAgreement(id: number) {
+    return this.http.post<any>(`${API.LOAN}/loans/${id}/sign-agreement?customerId=${this.cid}`, {});
+  }
   calculateEmi(p: number, r: number, t: number) {
-    return this.http.get<any>(`${LOAN}/loans/emi-calculator?principal=${p}&annualRate=${r}&tenureMonths=${t}`);
+    return this.http.get<any>(`${API.LOAN}/loans/emi-calculator?principal=${p}&annualRate=${r}&tenureMonths=${t}`);
   }
 
-  // Repayment â€” pass customerId as query param
-  getEmiSchedule(loanId: number)  { return this.http.get<any[]>(`${REPAY}/emi/${loanId}/schedule?customerId=${this.cid}`); }
-  makePayment(data: any)           { return this.http.post<any>(`${REPAY}/repayments/pay?customerId=${this.cid}`, data); }
-  getLoanSummary(loanId: number)   { return this.http.get<any>(`${REPAY}/repayments/${loanId}/summary?customerId=${this.cid}`); }
-  getForeclosure(loanId: number)   { return this.http.get<any>(`${REPAY}/repayments/${loanId}/foreclosure?customerId=${this.cid}`); }
+  // ── Repayment ────────────────────────────────────────────
+  getEmiSchedule(loanId: number) {
+    return this.http.get<any[]>(`${API.REPAYMENT}/emi/${loanId}/schedule?customerId=${this.cid}`);
+  }
+  makePayment(data: any) {
+    return this.http.post<any>(`${API.REPAYMENT}/repayments/pay?customerId=${this.cid}`, data);
+  }
+  getLoanSummary(loanId: number) {
+    return this.http.get<any>(`${API.REPAYMENT}/repayments/${loanId}/summary?customerId=${this.cid}`);
+  }
+  getForeclosure(loanId: number) {
+    return this.http.get<any>(`${API.REPAYMENT}/repayments/${loanId}/foreclosure`);
+  }
 }

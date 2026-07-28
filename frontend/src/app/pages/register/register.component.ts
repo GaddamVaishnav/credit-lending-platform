@@ -12,6 +12,7 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../shared/toast.service';
+import { CustomerService } from '../../services/customer.service';
 
 // Custom validators
 function mobileValidator(control: AbstractControl): ValidationErrors | null {
@@ -297,7 +298,8 @@ export class RegisterComponent {
     private fb: FormBuilder,
     private auth: AuthService,
     private router: Router,
-    private toast: ToastService
+    private toast: ToastService,
+    private customerService: CustomerService
   ) {
     this.registerForm = this.fb.group({
       fullName:       ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100),
@@ -397,10 +399,21 @@ export class RegisterComponent {
     this.auth.verifyOtp(this.f['mobile'].value, this.otp).subscribe({
       next: () => {
         this.toast.success('🎉 Verified! Welcome to CreditPlatform!');
+        // Check KYC status after successful registration
+        const customerId = this.auth.getCustomerId();
+        if (customerId) {
+          this.customerService.getKycStatus(customerId).subscribe({
+            next: (status: any) => {
+              if (status?.status === 'PENDING') {
+                this.toast.info('Please complete your KYC to apply for loans');
+              }
+            },
+            error: () => {}
+          });
+        }
         setTimeout(() => this.router.navigate(['/dashboard']), 500);
       },
       error: () => this.loading.set(false)
     });
   }
-
 }

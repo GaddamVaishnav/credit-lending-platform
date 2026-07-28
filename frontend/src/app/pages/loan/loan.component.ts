@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { LoanService } from '../../services/loan.service';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../shared/toast.service';
+import {CustomerService} from "../../services/customer.service";
 
 function loanAmountValidator(min: number, max: number) {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -325,7 +326,8 @@ export class LoanComponent implements OnInit {
     private fb: FormBuilder,
     public auth: AuthService,
     private loanService: LoanService,
-    private toast: ToastService
+    private toast: ToastService,
+    private customerService: CustomerService
   ) {}
 
   ngOnInit() {
@@ -412,6 +414,26 @@ export class LoanComponent implements OnInit {
         this.loanService.getMyApplications().subscribe(d => this.loans.set(d));
       },
       error: () => this.loading.set(false)
+    });
+  }
+
+  // Credit score refresh button handler:
+  fetchScore() {
+    this.customerService.fetchCreditScore().subscribe({
+      next: () => {
+        this.toast.info('Credit score refreshing...');
+        setTimeout(() => {
+          this.customerService.getProfile(
+              this.auth.getCustomerId()
+          ).subscribe({
+            next: p => this.auth.currentUser.set({
+              ...this.auth.currentUser(), ...p
+            }),
+            error: () => {}
+          });
+        }, 3000);
+      },
+      error: () => {}
     });
   }
 

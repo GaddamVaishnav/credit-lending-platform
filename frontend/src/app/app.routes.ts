@@ -3,10 +3,7 @@ import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
-  // Default redirect
   { path: '', redirectTo: '/login', pathMatch: 'full' },
-
-  // Customer routes
   {
     path: 'login',
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent)
@@ -30,8 +27,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./pages/repayment/repayment.component').then(m => m.RepaymentComponent)
   },
-
-  // Admin routes — protected by adminGuard
+  {
+    path: 'features',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/features/features.component').then(m => m.FeaturesComponent)
+  },
   {
     path: 'admin-login',
     loadComponent: () => import('./pages/admin/admin-login.component').then(m => m.AdminLoginComponent)
@@ -41,7 +41,5 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     loadComponent: () => import('./pages/admin/admin.component').then(m => m.AdminComponent)
   },
-
-  // Wildcard
   { path: '**', redirectTo: '/login' }
 ];
