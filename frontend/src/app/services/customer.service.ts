@@ -11,8 +11,12 @@ export class CustomerService {
 
   submitKyc(data: any)            { return this.http.post(`${API.ONBOARDING}/kyc/submit`, data); }
   getKycStatus(customerId: number){ return this.http.get(`${API.ONBOARDING}/kyc/status/${customerId}`); }
-  fetchCreditScore()              { return this.http.post(`${API.ONBOARDING}/credit-score/fetch`, {}); }
+  fetchCreditScore() {
+    const cid = this.auth.getCustomerId();
+    return this.http.post(`${API.ONBOARDING}/credit-score/fetch?customerId=${cid}`, {});
+  }
   getProfile(customerId: number)  { return this.http.get<any>(`${API.ONBOARDING}/customers/${customerId}/profile`); }
   getMyProfile()                  { return this.http.get<any>(`${API.ONBOARDING}/customers/${this.cid}/profile`); }
   updateProfile(data: any)        { return this.http.put(`${API.ONBOARDING}/customers/${this.cid}`, data); }
 }
+

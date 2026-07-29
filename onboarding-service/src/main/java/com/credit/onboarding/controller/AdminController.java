@@ -4,13 +4,13 @@ import com.credit.onboarding.dto.CustomerProfileDto;
 import com.credit.onboarding.entity.Customer;
 import com.credit.onboarding.entity.CustomerStatus;
 import com.credit.onboarding.repository.CustomerRepository;
-import com.credit.onboarding.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,43 +21,67 @@ import java.util.Map;
 public class AdminController {
 
     private final CustomerRepository customerRepository;
-    private final CustomerService    customerService;
 
-    // Get all customers
     @GetMapping("/customers")
     public ResponseEntity<List<CustomerProfileDto>> getAllCustomers() {
-        List<CustomerProfileDto> customers = customerRepository.findAll()
-                .stream().map(this::toDto).toList();
-        return ResponseEntity.ok(customers);
+        return ResponseEntity.ok(customerRepository.findAll()
+                .stream().map(this::toDto).toList());
     }
 
-    // Make customer eligible
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getStats() {
+        List<Customer> all = customerRepository.findAll();
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalCustomers",    all.size());
+        stats.put("eligibleCustomers", all.stream()
+                .filter(c -> c.getStatus() == CustomerStatus.ELIGIBLE).count());
+        stats.put("pendingKyc", all.stream()
+                .filter(c -> c.getStatus() == CustomerStatus.KYC_PENDING
+                          || c.getStatus() == CustomerStatus.DOCS_PENDING).count());
+        stats.put("avgCreditScore", all.stream()
+                .filter(c -> c.getCreditScore() != null)
+                .mapToInt(Customer::getCreditScore)
+                .average().orElse(0));
+        return ResponseEntity.ok(stats);
+    }
+
     @PostMapping("/customers/{id}/make-eligible")
     @Transactional
     public ResponseEntity<Map<String, String>> makeEligible(@PathVariable Long id) {
-        Customer customer = customerRepository.findById(id)
+        Customer c = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
-        customer.setStatus(CustomerStatus.ELIGIBLE);
-        if (customer.getCreditScore() == null) customer.setCreditScore(700);
-        customerRepository.save(customer);
-        log.info("Admin made customer {} eligible", id);
+        c.setStatus(CustomerStatus.ELIGIBLE);
+        if (c.getCreditScore() == null) c.setCreditScore(700);
+        customerRepository.save(c);
+        log.info("Admin made customer #{} eligible", id);
         return ResponseEntity.ok(Map.of(
-                "message", "Customer is now ELIGIBLE",
+                "message", c.getFullName() + " is now ELIGIBLE",
                 "customerId", String.valueOf(id)
         ));
     }
 
-    // Update credit score
     @PostMapping("/customers/{id}/credit-score")
     @Transactional
-    public ResponseEntity<Map<String, String>> updateCreditScore(
+    public ResponseEntity<Map<String, String>> updateScore(
             @PathVariable Long id,
             @RequestBody Map<String, Integer> body) {
-        Customer customer = customerRepository.findById(id)
+        Customer c = customerRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
-        customer.setCreditScore(body.get("score"));
-        customerRepository.save(customer);
-        return ResponseEntity.ok(Map.of("message", "Credit score updated to " + body.get("score")));
+        c.setCreditScore(body.get("score"));
+        customerRepository.save(c);
+        return ResponseEntity.ok(Map.of(
+                "message", "Credit score updated to " + body.get("score")
+        ));
+    }
+
+    @PostMapping("/customers/{id}/kyc-verify")
+    @Transactional
+    public ResponseEntity<Map<String, String>> kycVerify(@PathVariable Long id) {
+        Customer c = customerRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
+        c.setStatus(CustomerStatus.KYC_VERIFIED);
+        customerRepository.save(c);
+        return ResponseEntity.ok(Map.of("message", "Customer KYC verified"));
     }
 
     private CustomerProfileDto toDto(Customer c) {

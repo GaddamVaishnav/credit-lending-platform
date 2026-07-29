@@ -103,8 +103,14 @@ public class CustomerController {
     // ---- Credit Score ----
     @PostMapping("/credit-score/fetch")
     public ResponseEntity<Map<String, String>> fetchCreditScore(
+            @RequestParam(required = false) Long customerId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        Long customerId = getCustomerId(userDetails);
+        if (customerId == null && userDetails != null) {
+            customerId = getCustomerId(userDetails);
+        }
+        if (customerId == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "customerId required"));
+        }
         String message = customerService.triggerCreditScoreFetch(customerId);
         return ResponseEntity.accepted().body(Map.of("message", message));
     }
@@ -114,3 +120,4 @@ public class CustomerController {
         return ResponseEntity.ok(customerService.getAllCustomers());
     }
 }
+

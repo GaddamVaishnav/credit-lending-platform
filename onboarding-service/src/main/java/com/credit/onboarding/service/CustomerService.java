@@ -142,7 +142,8 @@ public class CustomerService {
 
     @Transactional
     public String triggerCreditScoreFetch(Long customerId) {
-        Customer customer = findAndValidateStatus(customerId, CustomerStatus.KYC_VERIFIED);
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new RuntimeException("Customer not found: " + customerId));
         creditScoreService.fetchCreditScore(customerId);
         log.info("Credit score fetch triggered for customer: {}", customerId);
         return "Credit score fetch initiated. You will be notified once complete.";
@@ -228,3 +229,4 @@ public class CustomerService {
         return "ENC:" + value;
     }
 }
+

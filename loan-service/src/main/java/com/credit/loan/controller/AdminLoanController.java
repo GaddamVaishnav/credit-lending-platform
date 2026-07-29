@@ -4,13 +4,13 @@ import com.credit.loan.dto.LoanApplicationDto;
 import com.credit.loan.entity.ApplicationStatus;
 import com.credit.loan.entity.LoanApplication;
 import com.credit.loan.repository.LoanApplicationRepository;
-import com.credit.loan.service.LoanApplicationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,87 +21,110 @@ import java.util.Map;
 public class AdminLoanController {
 
     private final LoanApplicationRepository loanRepository;
-    private final LoanApplicationService    loanService;
 
-    // GET all loans (admin view)
+    // ── GET ALL loans ─────────────────────────────────────────
     @GetMapping("/all")
     public ResponseEntity<List<LoanApplicationDto>> getAllLoans() {
-        List<LoanApplicationDto> loans = loanRepository.findAll()
-                .stream().map(this::toDto).toList();
-        return ResponseEntity.ok(loans);
+        return ResponseEntity.ok(loanRepository.findAll()
+                .stream().map(this::toDto).toList());
     }
 
-    // Admin approve loan
+    // ── GET admin stats ───────────────────────────────────────
+    @GetMapping("/admin/stats")
+    public ResponseEntity<Map<String, Object>> getStats() {
+        List<LoanApplication> all = loanRepository.findAll();
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalLoans",    all.size());
+        stats.put("pendingLoans",  all.stream().filter(l ->
+                List.of(ApplicationStatus.SUBMITTED, ApplicationStatus.UNDER_REVIEW)
+                    .contains(l.getStatus())).count());
+        stats.put("approvedLoans", all.stream().filter(l ->
+                List.of(ApplicationStatus.APPROVED, ApplicationStatus.AGREEMENT_PENDING,
+                        ApplicationStatus.AGREEMENT_SIGNED, ApplicationStatus.DISBURSED)
+                    .contains(l.getStatus())).count());
+        stats.put("rejectedLoans", all.stream().filter(l ->
+                l.getStatus() == ApplicationStatus.REJECTED).count());
+        stats.put("totalDisbursed", all.stream()
+                .filter(l -> l.getStatus() == ApplicationStatus.DISBURSED)
+                .mapToDouble(l -> l.getApprovedAmount() != null ? l.getApprovedAmount() : 0)
+                .sum());
+        return ResponseEntity.ok(stats);
+    }
+
+    // ── APPROVE loan ──────────────────────────────────────────
     @PostMapping("/admin/{id}/approve")
     @Transactional
-    public ResponseEntity<Map<String, Object>> adminApproveLoan(@PathVariable Long id) {
-        LoanApplication loan = loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found: " + id));
-
+    public ResponseEntity<Map<String, Object>> approveLoan(@PathVariable Long id) {
+        LoanApplication loan = findById(id);
         loan.setStatus(ApplicationStatus.APPROVED);
         loan.setApprovedAmount(loan.getRequestedAmount());
         if (loan.getInterestRate() == null) loan.setInterestRate(11.0);
-        if (loan.getEmiAmount() == null) {
-            double r   = loan.getInterestRate() / 12 / 100;
-            double n   = loan.getTenureMonths();
-            double emi = (loan.getRequestedAmount() * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
-            loan.setEmiAmount(emi);
-        }
+        if (loan.getEmiAmount() == null)
+            loan.setEmiAmount(calcEmi(loan.getRequestedAmount(),
+                    loan.getInterestRate(), loan.getTenureMonths()));
         loanRepository.save(loan);
-        log.info("Admin approved loan: {}", id);
+        log.info("Admin approved loan #{}", id);
         return ResponseEntity.ok(Map.of(
-                "message",        "Loan approved successfully",
-                "loanId",         id,
-                "status",         "APPROVED",
-                "approvedAmount", loan.getApprovedAmount()
+                "message", "Loan #" + id + " approved",
+                "loanId",  id,
+                "status",  "APPROVED",
+                "approvedAmount", loan.getApprovedAmount(),
+                "emiAmount", loan.getEmiAmount()
         ));
     }
 
-    // Admin reject loan
+    // ── REJECT loan ───────────────────────────────────────────
     @PostMapping("/admin/{id}/reject")
     @Transactional
-    public ResponseEntity<Map<String, String>> adminRejectLoan(
+    public ResponseEntity<Map<String, String>> rejectLoan(
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
-        LoanApplication loan = loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found: " + id));
-
+        LoanApplication loan = findById(id);
         loan.setStatus(ApplicationStatus.REJECTED);
         loan.setRejectionReason(body.getOrDefault("reason", "Rejected by admin"));
         loanRepository.save(loan);
-        log.info("Admin rejected loan: {} — {}", id, body.get("reason"));
+        log.info("Admin rejected loan #{}", id);
         return ResponseEntity.ok(Map.of(
-                "message", "Loan rejected",
+                "message", "Loan #" + id + " rejected",
                 "reason",  body.getOrDefault("reason", "")
         ));
     }
 
-    // Set to AGREEMENT_PENDING
+    // ── AGREEMENT PENDING ─────────────────────────────────────
     @PostMapping("/admin/{id}/agreement-pending")
     @Transactional
     public ResponseEntity<Map<String, String>> setAgreementPending(@PathVariable Long id) {
-        LoanApplication loan = loanRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Loan not found: " + id));
+        LoanApplication loan = findById(id);
         loan.setStatus(ApplicationStatus.AGREEMENT_PENDING);
         loanRepository.save(loan);
-        return ResponseEntity.ok(Map.of("message", "Status set to AGREEMENT_PENDING"));
+        return ResponseEntity.ok(Map.of("message", "Set to AGREEMENT_PENDING"));
     }
 
-    private LoanApplicationDto toDto(LoanApplication loan) {
+    private LoanApplication findById(Long id) {
+        return loanRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Loan not found: " + id));
+    }
+
+    private double calcEmi(double principal, double rate, int months) {
+        double r = rate / 12 / 100;
+        return (principal * r * Math.pow(1+r, months)) / (Math.pow(1+r, months) - 1);
+    }
+
+    private LoanApplicationDto toDto(LoanApplication l) {
         return LoanApplicationDto.builder()
-                .id(loan.getId())
-                .customerId(loan.getCustomerId())
-                .loanType(loan.getLoanType())
-                .requestedAmount(loan.getRequestedAmount())
-                .approvedAmount(loan.getApprovedAmount())
-                .tenureMonths(loan.getTenureMonths())
-                .interestRate(loan.getInterestRate())
-                .emiAmount(loan.getEmiAmount())
-                .processingFee(loan.getProcessingFee())
-                .status(loan.getStatus())
-                .rejectionReason(loan.getRejectionReason())
-                .appliedAt(loan.getAppliedAt())
-                .approvedAt(loan.getApprovedAt())
+                .id(l.getId())
+                .customerId(l.getCustomerId())
+                .loanType(l.getLoanType())
+                .requestedAmount(l.getRequestedAmount())
+                .approvedAmount(l.getApprovedAmount())
+                .tenureMonths(l.getTenureMonths())
+                .interestRate(l.getInterestRate())
+                .emiAmount(l.getEmiAmount())
+                .processingFee(l.getProcessingFee())
+                .status(l.getStatus())
+                .rejectionReason(l.getRejectionReason())
+                .appliedAt(l.getAppliedAt())
+                .approvedAt(l.getApprovedAt())
                 .build();
     }
 }
