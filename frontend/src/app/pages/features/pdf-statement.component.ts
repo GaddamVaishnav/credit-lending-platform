@@ -5,8 +5,8 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { ToastService } from '../../shared/toast.service';
 
-const REPAYMENT_API = 'http://16.112.128.15:8084/api/v1';
-const LOAN_API      = 'http://16.112.128.15:8082/api/v1';
+const REPAYMENT_API = 'http://18.61.229.106:8084/api/v1';
+const LOAN_API      = 'http://18.61.229.106:8082/api/v1';
 
 @Component({
   selector: 'app-pdf-statement',

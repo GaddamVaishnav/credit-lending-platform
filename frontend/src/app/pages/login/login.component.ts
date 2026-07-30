@@ -25,7 +25,10 @@ import { ToastService } from '../../shared/toast.service';
           </div>
           <div class="field">
             <label>Password</label>
-            <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" required>
+            <input [type]="showPw ? 'text' : 'password'" [(ngModel)]="password" name="password" placeholder="••••••••" required>
+            <button type="button" class="eye" (click)="showPw=!showPw">
+                {{ showPw ? '🙈' : '👁️' }}
+            </button>
           </div>
           <button type="submit" class="btn-primary" [disabled]="loading()">
             {{ loading() ? 'Signing in...' : 'Sign in' }}
@@ -60,6 +63,7 @@ export class LoginComponent {
   email = '';
   password = '';
   loading = signal(false);
+  showPw   = false;
 
   constructor(
     private auth: AuthService,

@@ -35,8 +35,8 @@ public class SecurityConfig {
                 "http://localhost:4200",
                 "http://localhost:4201",
                 "http://127.0.0.1:4200",
-                "http://16.112.128.15",
-                "https://16.112.128.15",
+                "http://18.61.229.106",
+                "https://18.61.229.106",
                 "https://creditplatform.duckdns.org",
                 "http://creditplatform.duckdns.org"
         ));

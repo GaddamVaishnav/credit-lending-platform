@@ -1,4 +1,4 @@
-﻿import { Component, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -16,13 +16,13 @@ const ADMIN_PASSWORD = 'Admin@1234';
     <div class="page-bg">
       <div class="card">
         <div class="logo-wrap">
-          <div class="logo">ðŸ”</div>
+          <div class="logo">🔐</div>
           <h1>Admin Portal</h1>
-          <p>CreditPlatform â€” Restricted Access</p>
+          <p>CreditPlatform — Restricted Access</p>
         </div>
 
         <div class="alert-warning">
-          âš ï¸ This portal is for authorized administrators only.
+          ⚠️ This portal is for authorized administrators only.
           Unauthorized access is strictly prohibited.
         </div>
 
@@ -38,20 +38,20 @@ const ADMIN_PASSWORD = 'Admin@1234';
             <div class="pw-wrap">
               <input [type]="showPw ? 'text' : 'password'"
                 [(ngModel)]="password" name="password"
-                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢" required
+                placeholder="••••••••" required
                 [class.error-input]="error()">
               <button type="button" class="eye" (click)="showPw=!showPw">
-                {{ showPw ? 'ðŸ™ˆ' : 'ðŸ‘ï¸' }}
+                {{ showPw ? '🙈' : '👁️' }}
               </button>
             </div>
           </div>
 
           <div class="error-box" *ngIf="error()">
-            âŒ {{ error() }}
+            ❌ {{ error() }}
           </div>
 
           <button type="submit" class="btn-admin" [disabled]="loading()">
-            {{ loading() ? 'Authenticating...' : 'ðŸ” Login as Admin' }}
+            {{ loading() ? 'Authenticating...' : '🔐 Login as Admin' }}
           </button>
         </form>
 
@@ -62,7 +62,7 @@ const ADMIN_PASSWORD = 'Admin@1234';
         </div>
 
         <p class="back-link">
-          <a routerLink="/login">â† Back to customer login</a>
+          <a routerLink="/login">← Back to customer login</a>
         </p>
       </div>
     </div>
@@ -110,11 +110,11 @@ export class AdminLoginComponent {
         // Store admin session
         localStorage.setItem('adminToken', btoa(`${this.email}:${Date.now()}`));
         localStorage.setItem('isAdmin', 'true');
-        this.toast.success('âœ… Welcome, Admin! Redirecting to dashboard...');
+        this.toast.success('✅ Welcome, Admin! Redirecting to dashboard...');
         setTimeout(() => this.router.navigate(['/admin']), 500);
       } else {
         this.error.set('Invalid admin credentials. Please try again.');
-        this.toast.error('âŒ Invalid admin credentials');
+        this.toast.error('❌ Invalid admin credentials');
       }
       this.loading.set(false);
     }, 800);
